@@ -1,0 +1,38 @@
+delimiter //
+CREATE DEFINER=`root`@`localhost` PROCEDURE `cityschedule`(in departure_city_name varchar(45))
+begin
+	select * from airlines_schedule where DepartureCity like departure_city_name ;
+end//
+-----------------------------------------------------------------------------
+delimiter //
+CREATE DEFINER=`root`@`localhost` PROCEDURE `repeated_user`(in repetated_booking_no int)
+begin
+select x.* from
+(
+select users.user_id,booking_table.booking_id,airlines_booking.airline_id,fare.fare_type,airfare_price.price,
+row_number() over(partition by user_id) as NO_of_bookings_per_user
+from users
+join booking_table on users.user_id = booking_table.user_id
+join airlines_booking on airlines_booking.booking_id = booking_table.booking_id
+join fare1 on fare1.airline_id = airlines_booking.airline_id
+join fare on fare1.fare_id = fare.fare_id
+join airfare_price on airfare_price.airfare_id = fare1.airfare_id)x
+where x.NO_of_bookings_per_user>=repetated_booking_no ;
+
+end//
+-----------------------------------------------
+delimiter //
+CREATE DEFINER=`root`@`localhost` PROCEDURE `airfare_selection`(in faretype varchar(20))
+begin
+select x.* from
+(select airlines_details.airline_name, fare.fare_type , airfare_price.price,
+first_value (airline_name) over n as least_expensive,
+last_value (airline_name)   over n as most_expensive
+from airfare_price
+join fare1 on airfare_price.airfare_id= fare1.airfare_id
+join airlines_details on airlines_details.airline_id = fare1.airline_id
+join fare on fare.fare_id = fare1.fare_id
+window n as (partition by fare_type order by price asc
+              range between unbounded preceding and unbounded following))x
+where fare_type like faretype ;
+end //

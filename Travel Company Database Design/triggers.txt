@@ -1,0 +1,29 @@
+
+delimiter //
+create TRIGGER `count_trigger` AFTER INSERT ON `booking_table` FOR EACH ROW BEGIN
+declare ucount int;
+set ucount = (select count(*) from booking_table where user_id = new.user_id group by user_id);
+if ucount = 14   then
+insert into offer_table values(new.booking_id,20);
+elseif ucount= 15 then
+insert into offer_table values(new.booking_id,30);
+end if ;
+end //
+
+delimiter //
+CREATE TRIGGER `usersB_I` BEFORE INSERT ON `users` FOR EACH ROW BEGIN
+if new.Email_Id not like "%@%" then
+signal sqlstate '50001' set
+message_text="emaillllll check kar";
+ENd if;
+end //
+
+
+
+CREATE  TRIGGER `adusers_` AFTER DELETE ON `users` FOR EACH ROW insert into `deleted_users`
+values(concat( old.User_id," ",old.FirstName," ",now()))  
+
+delimiter //
+CREATE DEFINER=`root`@`localhost` TRIGGER `booking_table_BEFORE_INSERT` BEFORE INSERT ON `booking_table` FOR EACH ROW BEGIN
+set new.booking_date = current_timestamp();
+END //

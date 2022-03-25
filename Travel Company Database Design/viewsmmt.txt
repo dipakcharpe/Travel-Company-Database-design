@@ -1,0 +1,8 @@
+create view service_analysis_over_booking as
+select t1.ServiceTittle,t1.count,(count/(select count(*) from booking_table)*100) as percentage from 
+(select ServiceTittle,count(booking_id) as count from booking_table join services
+on booking_table.service_id=services.services_id 
+group by service_id) as t1;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY
+DEFINER VIEW `sql_project`.`airlinesrevenue_analysis_over_booking` AS select `t1`.`airline_id` AS `airline_id`,`t1`.`booking_count` AS `booking_count`,((`t1`.`booking_count` / sum(`t1`.`booking_count`) OVER () ) * 100) AS `percent_per_booking`,sum(`t1`.`price`) AS `price`,(cume_dist() OVER (ORDER BY `t1`.`price` )  * 100) AS `distribution_perAirline`,(percent_rank() OVER (ORDER BY `t1`.`price` )  * 100) AS `percentile` from (select `sql_project`.`airlines_booking`.`airline_id` AS `airline_id`,count(`sql_project`.`airlines_booking`.`airline_id`) AS `booking_count`,sum(`sql_project`.`airfare_price`.`price`) AS `price` from (((`sql_project`.`booking_table` join `sql_project`.`airlines_booking` on((`sql_project`.`booking_table`.`booking_id` = `sql_project`.`airlines_booking`.`booking_id`))) join `sql_project`.`fare1` on((`sql_project`.`fare1`.`airline_id` = `sql_project`.`airlines_booking`.`airline_id`))) join `sql_project`.`airfare_price` on((`sql_project`.`airfare_price`.`airfare_id` = `sql_project`.`fare1`.`airfare_id`))) group by `sql_project`.`airlines_booking`.`airline_id`) `t1` group by `t1`.`airline_id`
